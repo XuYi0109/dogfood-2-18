@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.chargingstation.mapper.ChargingStationMapper">
+    <resultMap id="ChargingStationResultMap" type="com.example.chargingstation.entity.ChargingStation">
+        <id column="id" property="id"/>
+        <result column="station_code" property="stationCode"/>
+        <result column="name" property="name"/>
+        <result column="region_code" property="regionCode"/>
+        <result column="address" property="address"/>
+        <result column="longitude" property="longitude"/>
+        <result column="latitude" property="latitude"/>
+        <result column="total_ports" property="totalPorts"/>
+        <result column="available_ports" property="availablePorts"/>
+        <result column="power" property="power"/>
+        <result column="price_per_kwh" property="pricePerKwh"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="base_column">
+        id, station_code, name, region_code, address, longitude, latitude,
+        total_ports, available_ports, power, price_per_kwh, status, create_time, update_time
+    </sql>
+
+    <select id="selectByRegionCodes" resultMap="ChargingStationResultMap">
+        SELECT
+            cs.id, cs.station_code, cs.name, cs.region_code, cs.address,
+            cs.longitude, cs.latitude, cs.total_ports, cs.available_ports,
+            cs.power, cs.price_per_kwh, cs.status, cs.create_time, cs.update_time
+        FROM charging_station cs
+        WHERE cs.region_code IN
+        <foreach collection="regionCodes" item="code" open="(" separator="," close=")">
+            #{code}
+        </foreach>
+        <if test="status != null">
+            AND cs.status = #{status}
+        </if>
+        <choose>
+            <when test="sortBy == 'available'">
+                ORDER BY cs.available_ports DESC
+            </when>
+            <when test="sortBy == 'price'">
+                ORDER BY cs.price_per_kwh ASC
+            </when>
+            <otherwise>
+                ORDER BY cs.create_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectById" resultMap="ChargingStationResultMap">
+        SELECT <include refid="base_column"/>
+        FROM charging_station
+        WHERE id = #{id}
+    </select>
+
+    <update id="updateAvailablePorts">
+        UPDATE charging_station cs
+        SET cs.available_ports = (
+            SELECT COUNT(*) FROM charging_port cp
+            WHERE cp.station_id = cs.id AND cp.status = 0
+        )
+        WHERE cs.id = #{stationId}
+    </update>
+</mapper>
