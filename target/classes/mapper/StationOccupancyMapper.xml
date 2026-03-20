@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.charging.station.mapper.StationOccupancyMapper">
+
+    <resultMap id="BaseResultMap" type="com.charging.station.entity.StationOccupancy">
+        <id column="id" property="id"/>
+        <result column="station_id" property="stationId"/>
+        <result column="port_number" property="portNumber"/>
+        <result column="occupancy_status" property="occupancyStatus"/>
+        <result column="vehicle_plate" property="vehiclePlate"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, station_id, port_number, occupancy_status, vehicle_plate, start_time, end_time, create_time
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM station_occupancy
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectByStationId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM station_occupancy
+        WHERE station_id = #{stationId}
+        ORDER BY port_number
+    </select>
+
+    <select id="selectOccupiedByStationId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM station_occupancy
+        WHERE station_id = #{stationId}
+          AND occupancy_status = 1
+        ORDER BY port_number
+    </select>
+
+    <insert id="insert" parameterType="com.charging.station.entity.StationOccupancy">
+        INSERT INTO station_occupancy (station_id, port_number, occupancy_status, vehicle_plate, start_time, end_time, create_time)
+        VALUES (#{stationId}, #{portNumber}, #{occupancyStatus}, #{vehiclePlate}, #{startTime}, #{endTime}, NOW())
+    </insert>
+
+    <update id="update" parameterType="com.charging.station.entity.StationOccupancy">
+        UPDATE station_occupancy
+        SET occupancy_status = #{occupancyStatus},
+            vehicle_plate = #{vehiclePlate},
+            start_time = #{startTime},
+            end_time = #{endTime}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM station_occupancy
+        WHERE id = #{id}
+    </delete>
+
+</mapper>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.charging.station.mapper.RouteInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.charging.station.entity.RouteInfo">
+        <id column="id" property="id"/>
+        <result column="start_region_id" property="startRegionId"/>
+        <result column="end_region_id" property="endRegionId"/>
+        <result column="distance" property="distance"/>
+        <result column="estimated_time" property="estimatedTime"/>
+        <result column="route_path" property="routePath"/>
+        <result column="traffic_status" property="trafficStatus"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, start_region_id, end_region_id, distance, estimated_time, route_path, traffic_status
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM route_info
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectByRegions" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM route_info
+        WHERE start_region_id = #{startRegionId}
+          AND end_region_id = #{endRegionId}
+    </select>
+
+    <select id="selectByStartRegionId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM route_info
+        WHERE start_region_id = #{startRegionId}
+        ORDER BY end_region_id
+    </select>
+
+    <select id="selectByEndRegionId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM route_info
+        WHERE end_region_id = #{endRegionId}
+        ORDER BY start_region_id
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM route_info
+        ORDER BY start_region_id, end_region_id
+    </select>
+
+</mapper>
