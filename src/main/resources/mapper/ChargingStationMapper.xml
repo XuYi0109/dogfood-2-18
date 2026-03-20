@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.charging.station.mapper.ChargingStationMapper">
+
+    <resultMap id="BaseResultMap" type="com.charging.station.entity.ChargingStation">
+        <id column="id" property="id"/>
+        <result column="station_name" property="stationName"/>
+        <result column="station_code" property="stationCode"/>
+        <result column="region_id" property="regionId"/>
+        <result column="address" property="address"/>
+        <result column="longitude" property="longitude"/>
+        <result column="latitude" property="latitude"/>
+        <result column="total_ports" property="totalPorts"/>
+        <result column="available_ports" property="availablePorts"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, station_name, station_code, region_id, address, longitude, latitude,
+        total_ports, available_ports, status, create_time, update_time
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM charging_station
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectByRegionId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM charging_station
+        WHERE region_id = #{regionId}
+        ORDER BY id
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM charging_station
+        ORDER BY region_id, id
+    </select>
+
+    <update id="updateAvailablePorts">
+        UPDATE charging_station
+        SET available_ports = #{availablePorts},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper>

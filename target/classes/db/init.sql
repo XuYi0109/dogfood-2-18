@@ -1,0 +1,186 @@
+CREATE DATABASE IF NOT EXISTS charging_station DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE charging_station;
+
+DROP TABLE IF EXISTS station_occupancy;
+DROP TABLE IF EXISTS charging_station;
+DROP TABLE IF EXISTS route_info;
+DROP TABLE IF EXISTS region;
+
+CREATE TABLE region (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '区域ID',
+    region_name VARCHAR(100) NOT NULL COMMENT '区域名称',
+    region_code VARCHAR(50) NOT NULL UNIQUE COMMENT '区域编码',
+    longitude DECIMAL(10, 6) COMMENT '经度',
+    latitude DECIMAL(10, 6) COMMENT '纬度',
+    description VARCHAR(500) COMMENT '区域描述',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='区域表';
+
+CREATE TABLE charging_station (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '充电站ID',
+    station_name VARCHAR(100) NOT NULL COMMENT '充电站名称',
+    station_code VARCHAR(50) NOT NULL UNIQUE COMMENT '充电站编码',
+    region_id BIGINT NOT NULL COMMENT '所属区域ID',
+    address VARCHAR(200) COMMENT '详细地址',
+    longitude DECIMAL(10, 6) COMMENT '经度',
+    latitude DECIMAL(10, 6) COMMENT '纬度',
+    total_ports INT DEFAULT 0 COMMENT '总充电桩数量',
+    available_ports INT DEFAULT 0 COMMENT '可用充电桩数量',
+    status TINYINT DEFAULT 1 COMMENT '状态：0-维护中，1-正常，2-离线',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_region_id (region_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='充电站表';
+
+CREATE TABLE station_occupancy (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '占用记录ID',
+    station_id BIGINT NOT NULL COMMENT '充电站ID',
+    port_number INT NOT NULL COMMENT '充电桩端口号',
+    occupancy_status TINYINT DEFAULT 0 COMMENT '占用状态：0-空闲，1-占用中，2-故障',
+    vehicle_plate VARCHAR(20) COMMENT '车牌号',
+    start_time DATETIME COMMENT '开始充电时间',
+    end_time DATETIME COMMENT '预计结束时间',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_station_id (station_id),
+    UNIQUE KEY uk_station_port (station_id, port_number)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='充电桩占用记录表';
+
+CREATE TABLE route_info (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '路线ID',
+    start_region_id BIGINT NOT NULL COMMENT '起始区域ID',
+    end_region_id BIGINT NOT NULL COMMENT '目的区域ID',
+    distance DECIMAL(10, 2) COMMENT '距离（公里）',
+    estimated_time INT COMMENT '预计耗时（分钟）',
+    route_path VARCHAR(1000) COMMENT '路线描述',
+    traffic_status VARCHAR(20) COMMENT '交通状态：畅通/缓行/拥堵',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_start_region (start_region_id),
+    INDEX idx_end_region (end_region_id),
+    UNIQUE KEY uk_route (start_region_id, end_region_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='路线信息表';
+
+INSERT INTO region (id, region_name, region_code, longitude, latitude, description) VALUES
+(1, '朝阳区', 'CY', 116.486, 39.921, '北京市朝阳区，商业中心区域'),
+(2, '海淀区', 'HD', 116.298, 39.959, '北京市海淀区，科技园区'),
+(3, '西城区', 'XC', 116.366, 39.912, '北京市西城区，政务中心'),
+(4, '东城区', 'DC', 116.418, 39.928, '北京市东城区，历史文化区'),
+(5, '丰台区', 'FT', 116.287, 39.858, '北京市丰台区，交通枢纽');
+
+INSERT INTO charging_station (id, station_name, station_code, region_id, address, longitude, latitude, total_ports, available_ports, status) VALUES
+(1, '朝阳大悦城充电站', 'CY-001', 1, '朝阳区朝阳北路101号', 116.486, 39.921, 8, 3, 1),
+(2, '朝阳公园充电站', 'CY-002', 1, '朝阳区朝阳公园南路1号', 116.478, 39.942, 6, 2, 1),
+(3, '中关村充电站', 'HD-001', 2, '海淀区中关村大街1号', 116.298, 39.959, 10, 4, 1),
+(4, '五道口充电站', 'HD-002', 2, '海淀区成府路28号', 116.326, 39.991, 6, 1, 1),
+(5, '西单充电站', 'XC-001', 3, '西城区西单北大街', 116.366, 39.912, 8, 5, 1),
+(6, '金融街充电站', 'XC-002', 3, '西城区金融街', 116.356, 39.913, 12, 6, 1),
+(7, '王府井充电站', 'DC-001', 4, '东城区王府井大街', 116.418, 39.928, 6, 2, 1),
+(8, '东直门充电站', 'DC-002', 4, '东城区东直门内大街', 116.435, 39.944, 8, 4, 1),
+(9, '丰台科技园充电站', 'FT-001', 5, '丰台区科技园', 116.287, 39.858, 10, 7, 1),
+(10, '丽泽商务区充电站', 'FT-002', 5, '丰台区丽泽路', 116.305, 39.865, 6, 3, 1);
+
+INSERT INTO station_occupancy (station_id, port_number, occupancy_status, vehicle_plate, start_time, end_time) VALUES
+(1, 1, 1, '京A12345', '2024-01-15 09:00:00', '2024-01-15 11:00:00'),
+(1, 2, 1, '京B67890', '2024-01-15 09:30:00', '2024-01-15 12:00:00'),
+(1, 3, 1, '京C11111', '2024-01-15 10:00:00', '2024-01-15 13:00:00'),
+(1, 4, 0, NULL, NULL, NULL),
+(1, 5, 0, NULL, NULL, NULL),
+(1, 6, 0, NULL, NULL, NULL),
+(1, 7, 2, NULL, NULL, NULL),
+(1, 8, 0, NULL, NULL, NULL),
+(2, 1, 1, '京D22222', '2024-01-15 08:30:00', '2024-01-15 10:30:00'),
+(2, 2, 1, '京E33333', '2024-01-15 09:00:00', '2024-01-15 11:30:00'),
+(2, 3, 0, NULL, NULL, NULL),
+(2, 4, 0, NULL, NULL, NULL),
+(2, 5, 0, NULL, NULL, NULL),
+(2, 6, 0, NULL, NULL, NULL),
+(3, 1, 1, '京F44444', '2024-01-15 07:00:00', '2024-01-15 09:00:00'),
+(3, 2, 1, '京G55555', '2024-01-15 08:00:00', '2024-01-15 10:00:00'),
+(3, 3, 1, '京H66666', '2024-01-15 08:30:00', '2024-01-15 11:00:00'),
+(3, 4, 0, NULL, NULL, NULL),
+(3, 5, 0, NULL, NULL, NULL),
+(3, 6, 0, NULL, NULL, NULL),
+(3, 7, 0, NULL, NULL, NULL),
+(3, 8, 0, NULL, NULL, NULL),
+(3, 9, 0, NULL, NULL, NULL),
+(3, 10, 0, NULL, NULL, NULL),
+(4, 1, 1, '京J77777', '2024-01-15 10:00:00', '2024-01-15 12:00:00'),
+(4, 2, 0, NULL, NULL, NULL),
+(4, 3, 0, NULL, NULL, NULL),
+(4, 4, 0, NULL, NULL, NULL),
+(4, 5, 0, NULL, NULL, NULL),
+(4, 6, 0, NULL, NULL, NULL),
+(5, 1, 0, NULL, NULL, NULL),
+(5, 2, 0, NULL, NULL, NULL),
+(5, 3, 0, NULL, NULL, NULL),
+(5, 4, 0, NULL, NULL, NULL),
+(5, 5, 0, NULL, NULL, NULL),
+(5, 6, 0, NULL, NULL, NULL),
+(5, 7, 0, NULL, NULL, NULL),
+(5, 8, 0, NULL, NULL, NULL),
+(6, 1, 1, '京K88888', '2024-01-15 09:00:00', '2024-01-15 11:00:00'),
+(6, 2, 1, '京L99999', '2024-01-15 09:30:00', '2024-01-15 12:00:00'),
+(6, 3, 0, NULL, NULL, NULL),
+(6, 4, 0, NULL, NULL, NULL),
+(6, 5, 0, NULL, NULL, NULL),
+(6, 6, 0, NULL, NULL, NULL),
+(6, 7, 0, NULL, NULL, NULL),
+(6, 8, 0, NULL, NULL, NULL),
+(6, 9, 0, NULL, NULL, NULL),
+(6, 10, 0, NULL, NULL, NULL),
+(6, 11, 0, NULL, NULL, NULL),
+(6, 12, 0, NULL, NULL, NULL),
+(7, 1, 1, '京M00001', '2024-01-15 10:00:00', '2024-01-15 13:00:00'),
+(7, 2, 1, '京N00002', '2024-01-15 10:30:00', '2024-01-15 14:00:00'),
+(7, 3, 0, NULL, NULL, NULL),
+(7, 4, 0, NULL, NULL, NULL),
+(7, 5, 0, NULL, NULL, NULL),
+(7, 6, 0, NULL, NULL, NULL),
+(8, 1, 0, NULL, NULL, NULL),
+(8, 2, 0, NULL, NULL, NULL),
+(8, 3, 0, NULL, NULL, NULL),
+(8, 4, 0, NULL, NULL, NULL),
+(8, 5, 0, NULL, NULL, NULL),
+(8, 6, 0, NULL, NULL, NULL),
+(8, 7, 0, NULL, NULL, NULL),
+(8, 8, 0, NULL, NULL, NULL),
+(9, 1, 0, NULL, NULL, NULL),
+(9, 2, 0, NULL, NULL, NULL),
+(9, 3, 0, NULL, NULL, NULL),
+(9, 4, 0, NULL, NULL, NULL),
+(9, 5, 0, NULL, NULL, NULL),
+(9, 6, 0, NULL, NULL, NULL),
+(9, 7, 0, NULL, NULL, NULL),
+(9, 8, 0, NULL, NULL, NULL),
+(9, 9, 0, NULL, NULL, NULL),
+(9, 10, 0, NULL, NULL, NULL),
+(10, 1, 1, '京P00003', '2024-01-15 11:00:00', '2024-01-15 14:00:00'),
+(10, 2, 0, NULL, NULL, NULL),
+(10, 3, 0, NULL, NULL, NULL),
+(10, 4, 0, NULL, NULL, NULL),
+(10, 5, 0, NULL, NULL, NULL),
+(10, 6, 0, NULL, NULL, NULL);
+
+INSERT INTO route_info (start_region_id, end_region_id, distance, estimated_time, route_path, traffic_status) VALUES
+(1, 2, 15.5, 35, '朝阳大悦城-四环-中关村', '畅通'),
+(1, 3, 8.2, 20, '朝阳大悦城-东二环-西单', '缓行'),
+(1, 4, 5.0, 15, '朝阳大悦城-朝阳门-东单', '畅通'),
+(1, 5, 18.0, 40, '朝阳大悦城-南三环-丰台', '拥堵'),
+(2, 1, 15.5, 35, '中关村-四环-朝阳大悦城', '畅通'),
+(2, 3, 10.0, 25, '中关村-北二环-西直门-西单', '缓行'),
+(2, 4, 12.0, 30, '中关村-北二环-东直门', '畅通'),
+(2, 5, 20.0, 45, '中关村-西三环-丰台', '缓行'),
+(3, 1, 8.2, 20, '西单-东二环-朝阳大悦城', '缓行'),
+(3, 2, 10.0, 25, '西单-西直门-北二环-中关村', '缓行'),
+(3, 4, 3.5, 10, '西单-天安门-东单', '畅通'),
+(3, 5, 12.0, 25, '西单-西二环-丰台', '畅通'),
+(4, 1, 5.0, 15, '东单-朝阳门-朝阳大悦城', '畅通'),
+(4, 2, 12.0, 30, '东直门-北二环-中关村', '畅通'),
+(4, 3, 3.5, 10, '东单-天安门-西单', '畅通'),
+(4, 5, 15.0, 35, '东单-南二环-丰台', '缓行'),
+(5, 1, 18.0, 40, '丰台-南三环-朝阳大悦城', '拥堵'),
+(5, 2, 20.0, 45, '丰台-西三环-中关村', '缓行'),
+(5, 3, 12.0, 25, '丰台-西二环-西单', '畅通'),
+(5, 4, 15.0, 35, '丰台-南二环-东单', '缓行');
