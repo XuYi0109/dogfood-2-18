@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.chargingstation.mapper.ChargingPortMapper">
+    <resultMap id="ChargingPortResultMap" type="com.example.chargingstation.entity.ChargingPort">
+        <id column="id" property="id"/>
+        <result column="port_code" property="portCode"/>
+        <result column="station_id" property="stationId"/>
+        <result column="port_type" property="portType"/>
+        <result column="status" property="status"/>
+        <result column="current_order_no" property="currentOrderNo"/>
+        <result column="start_charging_time" property="startChargingTime"/>
+        <result column="expected_end_time" property="expectedEndTime"/>
+        <result column="charged_kwh" property="chargedKwh"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectByStationId" resultMap="ChargingPortResultMap">
+        SELECT id, port_code, station_id, port_type, status, current_order_no,
+               start_charging_time, expected_end_time, charged_kwh, create_time, update_time
+        FROM charging_port
+        WHERE station_id = #{stationId}
+        ORDER BY port_code
+    </select>
+
+    <select id="countAvailableByStationId" resultType="int">
+        SELECT COUNT(*) FROM charging_port
+        WHERE station_id = #{stationId} AND status = 0
+    </select>
+</mapper>

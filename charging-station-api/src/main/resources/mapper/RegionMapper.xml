@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.chargingstation.mapper.RegionMapper">
+    <resultMap id="RegionResultMap" type="com.example.chargingstation.entity.Region">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="code" property="code"/>
+        <result column="parent_code" property="parentCode"/>
+        <result column="level" property="level"/>
+        <result column="longitude" property="longitude"/>
+        <result column="latitude" property="latitude"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectByParentCode" resultMap="RegionResultMap">
+        SELECT id, name, code, parent_code, level, longitude, latitude, create_time, update_time
+        FROM region
+        WHERE parent_code = #{parentCode}
+        ORDER BY code
+    </select>
+
+    <select id="selectByCode" resultMap="RegionResultMap">
+        SELECT id, name, code, parent_code, level, longitude, latitude, create_time, update_time
+        FROM region
+        WHERE code = #{code}
+    </select>
+
+    <select id="selectAllRegionCodes" resultType="string">
+        WITH RECURSIVE region_tree AS (
+            SELECT code FROM region WHERE code = #{code}
+            UNION ALL
+            SELECT r.code FROM region r
+            INNER JOIN region_tree rt ON r.parent_code = rt.code
+        )
+        SELECT code FROM region_tree
+    </select>
+</mapper>
