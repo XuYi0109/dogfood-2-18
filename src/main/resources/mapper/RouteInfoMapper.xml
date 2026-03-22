@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chargingstation.mapper.RouteInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.chargingstation.entity.RouteInfo">
+        <id column="id" property="id"/>
+        <result column="from_station_id" property="fromStationId"/>
+        <result column="to_station_id" property="toStationId"/>
+        <result column="distance_km" property="distanceKm"/>
+        <result column="estimated_duration" property="estimatedDuration"/>
+        <result column="route_type" property="routeType"/>
+        <result column="toll_fee" property="tollFee"/>
+        <result column="route_description" property="routeDescription"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findRoutesByRegionCode" resultMap="BaseResultMap">
+        SELECT ri.*
+        FROM route_info ri
+        INNER JOIN charging_station cs_from ON ri.from_station_id = cs_from.id
+        INNER JOIN region r ON cs_from.region_id = r.id
+        WHERE r.region_code = #{regionCode}
+        OR r.parent_id IN (SELECT id FROM region WHERE region_code = #{regionCode})
+    </select>
+
+</mapper>
