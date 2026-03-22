@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chargingstation.mapper.ChargingStationMapper">
+
+    <resultMap id="BaseResultMap" type="com.chargingstation.entity.ChargingStation">
+        <id column="id" property="id"/>
+        <result column="station_code" property="stationCode"/>
+        <result column="station_name" property="stationName"/>
+        <result column="region_id" property="regionId"/>
+        <result column="address" property="address"/>
+        <result column="longitude" property="longitude"/>
+        <result column="latitude" property="latitude"/>
+        <result column="total_piles" property="totalPiles"/>
+        <result column="available_piles" property="availablePiles"/>
+        <result column="occupied_piles" property="occupiedPiles"/>
+        <result column="status" property="status"/>
+        <result column="operator_name" property="operatorName"/>
+        <result column="contact_phone" property="contactPhone"/>
+        <result column="service_time" property="serviceTime"/>
+        <result column="parking_fee" property="parkingFee"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findByRegionCode" resultMap="BaseResultMap">
+        SELECT cs.*
+        FROM charging_station cs
+        INNER JOIN region r ON cs.region_id = r.id
+        WHERE r.region_code = #{regionCode}
+        AND cs.status = 1
+    </select>
+
+    <select id="findByRegionCodeWithPiles" resultMap="BaseResultMap">
+        SELECT cs.*
+        FROM charging_station cs
+        INNER JOIN region r ON cs.region_id = r.id
+        WHERE (r.region_code = #{regionCode} OR r.parent_id IN (
+            SELECT id FROM region WHERE region_code = #{regionCode}
+        ))
+        AND cs.status = 1
+    </select>
+
+</mapper>
